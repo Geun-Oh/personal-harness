@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# L3 Gate — Stop hook (L2 통과 후) 검증
-# 단위/통합 테스트 실행, 30초-5분
+# L3 Gate — Stop hook (after L2 passes) verification
+# Runs unit/integration tests, 30 seconds to 5 minutes
 
 set -euo pipefail
 
-# 프로젝트 루트 결정
+# Determine project root
 if [[ -n "${CLAUDE_PROJECT_DIR:-}" ]]; then
   PROJECT_ROOT="$CLAUDE_PROJECT_DIR"
 elif git rev-parse --show-toplevel &>/dev/null; then
@@ -17,12 +17,12 @@ cd "$PROJECT_ROOT"
 
 ERRORS=()
 
-# 테스트 프레임워크 감지 및 실행
+# Detect and run test framework
 TEST_RAN=false
 
-# Node.js (package.json에 test 스크립트가 있고, 실제 테스트가 존재할 때만)
+# Node.js (only when package.json has a test script and real tests exist)
 if [[ -f "package.json" ]] && grep -q '"test"' "package.json" 2>/dev/null; then
-  # "test": "echo..." 같은 더미 스크립트 제외
+  # Exclude dummy scripts like "test": "echo..."
   if ! grep -q '"test".*echo' "package.json" 2>/dev/null; then
     TEST_OUTPUT=$(npm test 2>&1) || {
       FAIL_COUNT=$(echo "$TEST_OUTPUT" | grep -c "fail\|FAIL\|Error" || echo "?")
@@ -65,13 +65,13 @@ if [[ "$TEST_RAN" == false ]] && [[ -f "Gemfile" ]]; then
   fi
 fi
 
-# 결과 출력
+# Output results
 if [[ ${#ERRORS[@]} -gt 0 ]]; then
   echo "[L3 Gate] Test verification:"
   for err in "${ERRORS[@]}"; do
     echo "  - $err"
   done
-  # 테스트 출력의 마지막 30줄을 표시 (에이전트가 원인 파악 가능)
+  # Show last 30 lines of test output (helps agent identify root cause)
   if [[ -n "${TEST_OUTPUT:-}" ]]; then
     echo "  --- Last 30 lines of test output ---"
     echo "$TEST_OUTPUT" | tail -30 | sed 's/^/  /'

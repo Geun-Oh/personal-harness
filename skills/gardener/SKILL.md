@@ -1,78 +1,78 @@
 ---
-description: "Gardener Agent — 문서-코드 불일치, 미사용 export, 아키텍처 위반을 스캔하고 정리 PR을 제안합니다. 이 스킬은 gardener 에이전트를 호출하여 실행합니다. 'gardener', '엔트로피 스캔', 'entropy', '정리' 시 트리거."
+description: "Gardener Agent — Scans for doc-code mismatches, unused exports, and architecture violations, then suggests cleanup PRs. This skill invokes the gardener agent to perform the scan. Triggers on 'gardener', 'entropy scan', 'entropy', 'cleanup'."
 ---
 
 # Gardener Agent
 
-에이전트는 인간보다 5-10배 빠르게 엔트로피를 축적합니다. Gardener Agent는 이를 지속적으로 관리합니다.
+Agents accumulate entropy 5-10x faster than humans. The Gardener Agent manages this continuously.
 
-## 실행 방식
+## How It Runs
 
-이 스킬은 `gardener` 에이전트에 작업을 위임합니다.
+This skill delegates work to the `gardener` agent.
 
-**반드시 Agent 도구로 gardener 에이전트를 호출하세요:**
+**Invoke the gardener agent using the Agent tool:**
 
 ```
 Agent(
   subagent_type="personal-harness:gardener",
-  prompt="현재 프로젝트의 엔트로피를 스캔해주세요. 문서-코드 불일치, 미사용 export, 아키텍처 위반, 코드 중복을 검사합니다."
+  prompt="Scan the current project for entropy: doc-code mismatches, unused exports, architecture violations, and code duplication."
 )
 ```
 
-스킬(이 파일)은 사용자 진입점이고, 실제 스캔 로직은 `agents/gardener.md`에 정의된 에이전트가 수행합니다. 에이전트는 읽기 전용으로 동작하며 직접 코드를 수정하지 않습니다.
+This skill (this file) is the user entry point; the actual scan logic is performed by the agent defined in `agents/gardener.md`. The agent operates in read-only mode and does not modify code directly.
 
-## 엔트로피 유형과 대응
+## Entropy Types and Responses
 
-| 엔트로피 유형 | 에이전트 코드 특성 | 감지 방법 |
+| Entropy Type | Agent Code Characteristic | Detection Method |
 |-------------|-----------------|----------|
-| 코드 중복 | 대량 발생 | 유사 함수/블록 탐색 |
-| 문서 드리프트 | 빠름 | 문서 ↔ 코드 불일치 비교 |
-| 아키텍처 드리프트 | 무의식적 위반 | 의존성 규칙 위반 탐색 |
-| 미사용 코드 | 빠르게 축적 | 미사용 export/import 감지 |
+| Code duplication | Occurs in large volumes | Search for similar functions/blocks |
+| Documentation drift | Fast | Compare doc ↔ code mismatches |
+| Architecture drift | Unconscious violations | Search for dependency rule violations |
+| Unused code | Accumulates quickly | Detect unused exports/imports |
 
-## 스캔 항목 (에이전트가 수행)
+## Scan Items (performed by agent)
 
-### 1. 문서-코드 불일치
-- README.md의 설치/사용법이 실제 코드와 일치하는지
-- API 문서의 엔드포인트/파라미터가 실제 구현과 일치하는지
-- CLAUDE.md의 빌드/테스트 명령이 실제로 동작하는지
+### 1. Doc-Code Mismatches
+- Whether installation/usage instructions in README.md match actual code
+- Whether endpoints/parameters in API docs match actual implementation
+- Whether build/test commands in CLAUDE.md actually work
 
-### 2. 미사용 export 감지
-- export된 함수/클래스가 다른 파일에서 import되는지
-- 외부에서 사용되지 않는 public API
+### 2. Unused Export Detection
+- Whether exported functions/classes are imported in other files
+- Public APIs not used externally
 
-### 3. 아키텍처 위반 정기 검사
-- 레이어 의존성 규칙 위반 (예: UI → Service는 OK, Service → UI는 위반)
-- 순환 의존성 감지
+### 3. Periodic Architecture Violation Checks
+- Layer dependency rule violations (e.g., UI → Service is OK, Service → UI is a violation)
+- Circular dependency detection
 
-### 4. 코드 중복 탐색
-- 유사한 로직이 여러 파일에 반복되는 패턴
+### 4. Code Duplication Search
+- Patterns where similar logic is repeated across multiple files
 
-## 출력 형식
+## Output Format
 
-에이전트가 다음 형식으로 리포트를 반환합니다:
+The agent returns a report in the following format:
 
 ```
-## Gardener 엔트로피 스캔 결과
+## Gardener Entropy Scan Results
 
-### 문서-코드 불일치 (N건)
-1. [HIGH] 파일:줄번호 — 불일치 내용. 수정 방법: ...
+### Doc-Code Mismatches (N items)
+1. [HIGH] file:line — mismatch description. Fix: ...
 
-### 미사용 export (N건)
-1. [LOW] 파일:줄번호: `exportName` — 0 references
+### Unused Exports (N items)
+1. [LOW] file:line: `exportName` — 0 references
 
-### 아키텍처 위반 (N건)
-1. [HIGH] 파일 → 파일 — 역방향 의존성. 수정 방법: ...
+### Architecture Violations (N items)
+1. [HIGH] file → file — reverse dependency. Fix: ...
 
-### 코드 중복 (N건)
-1. [MED] 파일A:줄범위 ≈ 파일B:줄범위 — 공통 추출 제안
+### Code Duplication (N items)
+1. [MED] fileA:line-range ≈ fileB:line-range — suggest extracting common logic
 
-### 요약
+### Summary
 - Critical: 0 | High: N | Medium: N | Low: N
-- 추천: ...
+- Recommendation: ...
 ```
 
-## 주기적 실행
-- `/schedule`과 연동하여 주기적으로 실행할 수 있습니다
-- 예: `claude /schedule "매일 09:00" /personal-harness:gardener`
-- PR 생성 전 자동 스캔으로도 활용 가능합니다
+## Periodic Execution
+- Can be integrated with `/schedule` for periodic runs
+- Example: `claude /schedule "daily 09:00" /personal-harness:gardener`
+- Can also be used as an automated pre-PR scan

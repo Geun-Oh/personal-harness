@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Context Budget Monitor — Stop hook
-# CLAUDE.md, rules, MEMORY.md의 줄 수/추정 토큰을 측정하여 비만 증상 경고
+# Measures line counts and estimated tokens for CLAUDE.md, rules, and MEMORY.md, and warns about obesity symptoms
 
 set -euo pipefail
 
-# 프로젝트 루트 결정
+# Determine project root
 if [[ -n "${CLAUDE_PROJECT_DIR:-}" ]]; then
   PROJECT_ROOT="$CLAUDE_PROJECT_DIR"
 elif git rev-parse --show-toplevel &>/dev/null; then
@@ -17,13 +17,13 @@ cd "$PROJECT_ROOT"
 
 WARNINGS=()
 
-# 토큰 추정 함수 (1 토큰 ≈ 4 bytes for English, ≈ 1.5 bytes for Korean)
+# Token estimation function (1 token ≈ 4 bytes for English, ≈ 1.5 bytes for Korean)
 estimate_tokens() {
   local file="$1"
   if [[ -f "$file" ]]; then
     local bytes
     bytes=$(wc -c < "$file" | tr -d ' ')
-    # 혼합 언어 추정: 평균 3 bytes/token
+    # Mixed-language estimate: average 3 bytes/token
     echo $(( bytes / 3 ))
   else
     echo 0
@@ -39,7 +39,7 @@ get_lines() {
   fi
 }
 
-# 1. CLAUDE.md 검사 (권장: ≤100줄, ≤5%)
+# 1. CLAUDE.md check (recommended: ≤100 lines, ≤5%)
 CLAUDE_LINES=0
 CLAUDE_TOKENS=0
 if [[ -f "CLAUDE.md" ]]; then
@@ -50,7 +50,7 @@ if [[ -f "CLAUDE.md" ]]; then
   fi
 fi
 
-# 2. .claude/rules/ 검사 (권장: ≤3%)
+# 2. .claude/rules/ check (recommended: ≤3%)
 RULES_LINES=0
 RULES_TOKENS=0
 RULES_COUNT=0
@@ -67,7 +67,7 @@ if [[ -d ".claude/rules" ]]; then
   done < <(find .claude/rules -name "*.md" -print0 2>/dev/null)
 fi
 
-# 3. MEMORY.md 검사 (권장: ≤200줄, ≤2%)
+# 3. MEMORY.md check (recommended: ≤200 lines, ≤2%)
 MEMORY_LINES=0
 MEMORY_TOKENS=0
 MEMORY_FILE=""
@@ -81,8 +81,8 @@ if [[ -n "$MEMORY_FILE" ]]; then
   fi
 fi
 
-# 4. 카테고리별 비율 검사 (PDF 기준: CLAUDE.md ≤5%, rules ≤3%, MEMORY ≤2%)
-# 200K context window = 200,000 tokens 기준
+# 4. Per-category ratio check (PDF baseline: CLAUDE.md ≤5%, rules ≤3%, MEMORY ≤2%)
+# Based on 200K context window = 200,000 tokens
 CONTEXT_WINDOW=200000
 TOTAL_HARNESS_TOKENS=$((CLAUDE_TOKENS + RULES_TOKENS + MEMORY_TOKENS))
 
@@ -107,13 +107,13 @@ if [[ "$MEMORY_TOKENS" -gt 0 ]]; then
   fi
 fi
 
-# 전체 하네스 오버헤드 (≤20% = 실제 작업 ≥80%)
+# Total harness overhead (≤20% = actual work ≥80%)
 if [[ "$TOTAL_HARNESS_TOKENS" -gt 40000 ]]; then
   TOTAL_PCT=$(( TOTAL_HARNESS_TOKENS * 100 / CONTEXT_WINDOW ))
   WARNINGS+=("Total harness overhead: ~${TOTAL_HARNESS_TOKENS} tokens (${TOTAL_PCT}%, limit: ≤20%). Reduce to keep ≥80% for actual work.")
 fi
 
-# 결과 출력 (경고가 있을 때만)
+# Output results (only when warnings exist)
 if [[ ${#WARNINGS[@]} -gt 0 ]]; then
   echo "[Context Budget] Obesity symptoms detected:"
   for warn in "${WARNINGS[@]}"; do

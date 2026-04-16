@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# L2 Gate — Stop hook (턴 종료 시) 검증
-# 린터, 구조 테스트 등 5-30초 내 실행
+# L2 Gate — Stop hook (end of turn) verification
+# Runs linter, structure tests, etc. within 5-30 seconds
 
 set -euo pipefail
 
-# 프로젝트 루트 결정 (환경변수 우선, 없으면 git root, 최후에 CWD)
+# Determine project root (env var takes priority, then git root, finally CWD)
 if [[ -n "${CLAUDE_PROJECT_DIR:-}" ]]; then
   PROJECT_ROOT="$CLAUDE_PROJECT_DIR"
 elif git rev-parse --show-toplevel &>/dev/null; then
@@ -17,7 +17,7 @@ cd "$PROJECT_ROOT"
 
 ERRORS=()
 
-# 1. CLAUDE.md 줄 수 검사
+# 1. CLAUDE.md line count check
 if [[ -f "CLAUDE.md" ]]; then
   CLAUDE_LINES=$(wc -l < "CLAUDE.md" | tr -d ' ')
   if [[ "$CLAUDE_LINES" -gt 100 ]]; then
@@ -25,7 +25,7 @@ if [[ -f "CLAUDE.md" ]]; then
   fi
 fi
 
-# 2. AGENTS.md 모놀리식 안티패턴 검사
+# 2. AGENTS.md monolithic anti-pattern check
 if [[ -f "AGENTS.md" ]]; then
   AGENTS_LINES=$(wc -l < "AGENTS.md" | tr -d ' ')
   if [[ "$AGENTS_LINES" -gt 300 ]]; then
@@ -33,7 +33,7 @@ if [[ -f "AGENTS.md" ]]; then
   fi
 fi
 
-# 3. MEMORY.md 비대화 검사
+# 3. MEMORY.md bloat check
 MEMORY_FILE=""
 [[ -f "MEMORY.md" ]] && MEMORY_FILE="MEMORY.md"
 [[ -f ".claude/MEMORY.md" ]] && MEMORY_FILE=".claude/MEMORY.md"
@@ -44,7 +44,7 @@ if [[ -n "$MEMORY_FILE" ]]; then
   fi
 fi
 
-# 4. 프로젝트별 린터 실행 (존재하는 경우만)
+# 4. Run project-specific linter (only if present)
 if [[ -f "package.json" ]] && grep -q '"lint"' "package.json" 2>/dev/null; then
   if ! npm run lint --silent 2>/dev/null; then
     ERRORS+=("FAIL: npm run lint failed. Fix lint errors before proceeding.")
@@ -61,7 +61,7 @@ elif [[ -f "Gemfile" ]] && command -v rubocop &>/dev/null; then
   fi
 fi
 
-# 결과 출력
+# Output results
 HAS_FAIL=false
 if [[ ${#ERRORS[@]} -gt 0 ]]; then
   echo "[L2 Gate] Session check:"
@@ -73,7 +73,7 @@ if [[ ${#ERRORS[@]} -gt 0 ]]; then
   done
 fi
 
-# FAIL 레벨 에러가 있으면 차단 (WARN은 통과)
+# Block on FAIL-level errors (WARN passes through)
 if [[ "$HAS_FAIL" == true ]]; then
   exit 1
 fi

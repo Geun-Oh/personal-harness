@@ -1,60 +1,60 @@
 ---
-description: "Context Budget Monitor — 컨텍스트 윈도우 예산 비율(CLAUDE.md ≤5%, rules ≤3%, MEMORY.md ≤2%, 실제 작업 ≥80%)을 분석하고 비만 증상을 경고합니다. 'context budget', '컨텍스트 예산', '토큰 비율' 시 트리거."
+description: "Context Budget Monitor — Analyzes context window budget ratios (CLAUDE.md ≤5%, rules ≤3%, MEMORY.md ≤2%, actual work ≥80%) and warns about obesity symptoms. Triggers on 'context budget', 'token ratio'."
 ---
 
 # Context Budget Monitor
 
-컨텍스트 윈도우의 예산 배분을 분석하여 Context Rot을 조기 경고합니다.
+Analyzes context window budget allocation to provide early warning of Context Rot.
 
-## 예산 기준표
+## Budget Reference Table
 
-| 소스 | 권장 비율 | 설명 |
+| Source | Recommended Ratio | Description |
 |------|----------|------|
-| CLAUDE.md | ≤5% | 목차 역할, 100줄 이내 |
-| .claude/rules/ | ≤3% | 활성화된 규칙만 |
-| MEMORY.md | ≤2% | 200줄 이내 |
-| Tool definitions | ≤10% | 도구 수 최소화 |
-| 실제 작업 컨텍스트 | ≥80% | 코드, 테스트, 에러 로그 |
+| CLAUDE.md | ≤5% | Table-of-contents role, within 100 lines |
+| .claude/rules/ | ≤3% | Active rules only |
+| MEMORY.md | ≤2% | Within 200 lines |
+| Tool definitions | ≤10% | Minimize number of tools |
+| Actual work context | ≥80% | Code, tests, error logs |
 
-## 측정 방법
+## Measurement Method
 
-각 파일의 대략적인 토큰 수를 추정합니다 (1 토큰 ≈ 4 characters / 한국어 1 토큰 ≈ 1.5 characters):
+Estimates approximate token counts for each file (1 token ≈ 4 characters for English, ≈ 1.5 characters for Korean):
 
-1. CLAUDE.md 읽기 → 줄 수, 문자 수, 추정 토큰 수
-2. .claude/rules/*.md 전체 읽기 → 합산
-3. MEMORY.md 읽기 → 줄 수, 문자 수
-4. 전체 비율 계산
+1. Read CLAUDE.md → line count, character count, estimated token count
+2. Read all .claude/rules/*.md → sum totals
+3. Read MEMORY.md → line count, character count
+4. Calculate overall ratios
 
-## 비만 증상 감지
+## Obesity Symptom Detection
 
-다음 증상이 있으면 경고합니다:
-- CLAUDE.md가 100줄 초과
-- MEMORY.md가 200줄 초과
-- rules 파일 총합이 컨텍스트의 3% 초과 추정
-- 단일 규칙 파일이 50줄 초과
+Warns when any of the following are detected:
+- CLAUDE.md exceeds 100 lines
+- MEMORY.md exceeds 200 lines
+- Total rules files estimated to exceed 3% of context
+- A single rules file exceeds 50 lines
 
-## 출력 형식
+## Output Format
 
 ```
-## Context Budget 분석
+## Context Budget Analysis
 
-### 현재 배분
-| 소스 | 줄 수 | 추정 토큰 | 비율 | 상태 |
+### Current Allocation
+| Source | Lines | Est. Tokens | Ratio | Status |
 |------|------|----------|------|------|
 | CLAUDE.md | N | ~T | X% | OK/WARN |
 | rules/ | N | ~T | X% | OK/WARN |
 | MEMORY.md | N | ~T | X% | OK/WARN |
 
-### 비만 증상
-- [WARN] CLAUDE.md 150줄 — 100줄 이하로 줄이세요
-- [OK] 반복 파일 읽기 패턴 없음
+### Obesity Symptoms
+- [WARN] CLAUDE.md 150 lines — reduce to 100 lines or fewer
+- [OK] No repeated file-read patterns detected
 
-### 권장 조치
-1. CLAUDE.md에서 세부 내용을 L1 문서로 이동
+### Recommended Actions
+1. Move detailed content from CLAUDE.md to L1 documents
 2. ...
 ```
 
-## 주의사항
-- 토큰 수는 추정치입니다 (정확한 토큰화는 모델마다 다름)
-- 이 검사는 정적 파일 기준입니다. 런타임 컨텍스트 소비는 측정하지 않습니다
-- Hook 버전(#6 Gate Runner)과 연동하면 실시간 모니터링이 가능합니다
+## Notes
+- Token counts are estimates (exact tokenization varies by model)
+- This check is based on static files. Runtime context consumption is not measured
+- Integrating with the Hook version (Gate Runner #6) enables real-time monitoring

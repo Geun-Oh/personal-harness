@@ -1,67 +1,67 @@
 ---
-description: "Knowledge Pyramid Linter — CLAUDE.md와 문서 계층 구조(L0-L3)가 올바르게 구성되었는지 검사합니다. 'pyramid lint', 'check claude.md', '문서 구조 검사' 시 트리거."
+description: "Knowledge Pyramid Linter — Checks that CLAUDE.md and the document hierarchy (L0-L3) are properly structured. Triggers on 'pyramid lint', 'check claude.md', 'document structure check'."
 ---
 
 # Knowledge Pyramid Linter
 
-프로젝트의 Knowledge Pyramid(L0-L3) 구조를 검사하여 Context Rot을 방지합니다.
+Inspects the project's Knowledge Pyramid (L0-L3) structure to prevent Context Rot.
 
-## 검사 항목
+## Checks
 
-### L0: CLAUDE.md (진입점)
-1. **줄 수 검사**: 100줄 이하인지 확인
-2. **인덱스 역할**: 다음 레벨(L1) 문서로의 포인터가 있는지 확인
-3. **빌드/테스트 명령**: 핵심 명령어가 포함되어 있는지 확인
-4. **안티패턴 감지**: 300줄 이상의 모놀리식 구조 경고
+### L0: CLAUDE.md (entry point)
+1. **Line count check**: Verify it is 100 lines or fewer
+2. **Index role**: Verify pointers to next-level (L1) documents are present
+3. **Build/test commands**: Verify core commands are included
+4. **Anti-pattern detection**: Warn on monolithic structures of 300+ lines
 
-### L1: 아키텍처/표준 문서
-- ARCHITECTURE.md, CODING_STANDARDS.md 등 존재 여부
-- L2로의 포인터 존재 여부
+### L1: Architecture/Standards documents
+- Check for existence of ARCHITECTURE.md, CODING_STANDARDS.md, etc.
+- Check for pointers to L2
 
-### L2: 설계 문서
-- docs/design-docs/, docs/exec-plans/ 디렉토리 존재 여부
+### L2: Design documents
+- Check for existence of docs/design-docs/, docs/exec-plans/ directories
 
-### L3: 참조/생성 문서
-- references/, generated/ 디렉토리 존재 여부
+### L3: Reference/generated documents
+- Check for existence of references/, generated/ directories
 
-## 실행 방법
+## How to Run
 
-현재 프로젝트 디렉토리에서 다음을 검사합니다:
+Inspects the following from the current project directory:
 
-1. CLAUDE.md를 Read하여 줄 수와 내용을 분석
-2. AGENTS.md가 있다면 300줄 이상인지 검사 (안티패턴)
-3. L1-L3 디렉토리/파일 존재 여부를 Glob으로 확인
-4. 각 레벨에서 다음 레벨로의 포인터(링크/참조)가 있는지 확인
+1. Read CLAUDE.md and analyze line count and content
+2. If AGENTS.md exists, check whether it exceeds 300 lines (anti-pattern)
+3. Use Glob to verify existence of L1-L3 directories/files
+4. Verify pointers (links/references) to the next level at each level
 
-## 출력 형식
+## Output Format
 
 ```
-## Knowledge Pyramid 검사 결과
+## Knowledge Pyramid Check Results
 
 ### L0: CLAUDE.md
-- [PASS/FAIL] 줄 수: N줄 (권장: ≤100)
-- [PASS/FAIL] L1 포인터 존재
-- [PASS/FAIL] 빌드/테스트 명령 포함
+- [PASS/FAIL] Line count: N lines (recommended: ≤100)
+- [PASS/FAIL] L1 pointer present
+- [PASS/FAIL] Build/test commands included
 
-### L1: 아키텍처 문서
-- [PASS/FAIL] ARCHITECTURE.md 존재
-- [PASS/FAIL] L2 포인터 존재
+### L1: Architecture documents
+- [PASS/FAIL] ARCHITECTURE.md exists
+- [PASS/FAIL] L2 pointer present
 
-### L2: 설계 문서
-- [PASS/FAIL] docs/ 디렉토리 존재
+### L2: Design documents
+- [PASS/FAIL] docs/ directory exists
 
-### L3: 참조 문서
-- [INFO] references/ 디렉토리 존재 여부
+### L3: Reference documents
+- [INFO] references/ directory exists
 
-### 안티패턴
-- [WARN/PASS] 모놀리식 AGENTS.md (300줄+)
+### Anti-patterns
+- [WARN/PASS] Monolithic AGENTS.md (300+ lines)
 
-### 요약
-총 N개 항목 중 M개 통과, K개 실패, J개 경고
-다음 개선 액션: ...
+### Summary
+N of M items passed, K failed, J warnings
+Next improvement actions: ...
 ```
 
-## 주의사항
-- 이 검사는 프로젝트 루트에서 실행되어야 합니다
-- 파일이 없는 것 자체가 반드시 실패는 아닙니다 (L2, L3는 INFO 레벨)
-- CLAUDE.md가 없으면 전체 검사를 건너뛰고 생성을 권장합니다
+## Notes
+- This check must be run from the project root
+- A missing file is not necessarily a failure (L2 and L3 are INFO-level)
+- If CLAUDE.md is absent, the entire check is skipped and creation is recommended
