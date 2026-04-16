@@ -1,0 +1,19 @@
+{
+  "name": "personal-harness",
+  "version": "0.1.0",
+  "description": "Harness Engineering toolkit for Claude Code — 7 tools based on AI-DLC patterns",
+  "author": {
+    "name": "Geun-Oh"
+  },
+  "repository": "https://github.com/Geun-Oh/personal-harness",
+  "license": "MIT",
+  "keywords": [
+    "harness-engineering",
+    "ai-dlc",
+    "context-budget",
+    "knowledge-pyramid",
+    "feedback-ladder",
+    "maturity-model",
+    "entropy-management"
+  ]
+}
