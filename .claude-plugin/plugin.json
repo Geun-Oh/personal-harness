@@ -1,6 +1,6 @@
 {
   "name": "personal-harness",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Harness Engineering toolkit for Claude Code — 7 tools based on AI-DLC patterns",
   "author": {
     "name": "Geun-Oh"
@@ -15,5 +15,8 @@
     "feedback-ladder",
     "maturity-model",
     "entropy-management"
-  ]
+  ],
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "hooks": "./hooks/hooks.json"
 }
