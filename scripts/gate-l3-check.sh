@@ -34,7 +34,7 @@ fi
 
 # Python (pytest)
 if [[ "$TEST_RAN" == false ]] && command -v pytest &>/dev/null; then
-  if find . -maxdepth 3 -name "test_*.py" -o -name "*_test.py" 2>/dev/null | grep -q .; then
+  if find . -maxdepth 3 \( -name "test_*.py" -o -name "*_test.py" \) 2>/dev/null | grep -q .; then
     TEST_OUTPUT=$(pytest --tb=short -q 2>&1) || {
       ERRORS+=("FAIL: pytest failed. Fix failing tests before PR.")
     }
@@ -71,6 +71,11 @@ if [[ ${#ERRORS[@]} -gt 0 ]]; then
   for err in "${ERRORS[@]}"; do
     echo "  - $err"
   done
+  # 테스트 출력의 마지막 30줄을 표시 (에이전트가 원인 파악 가능)
+  if [[ -n "${TEST_OUTPUT:-}" ]]; then
+    echo "  --- Last 30 lines of test output ---"
+    echo "$TEST_OUTPUT" | tail -30 | sed 's/^/  /'
+  fi
   exit 1
 fi
 

@@ -81,11 +81,36 @@ if [[ -n "$MEMORY_FILE" ]]; then
   fi
 fi
 
-# 4. 전체 하네스 오버헤드 계산
+# 4. 카테고리별 비율 검사 (PDF 기준: CLAUDE.md ≤5%, rules ≤3%, MEMORY ≤2%)
+# 200K context window = 200,000 tokens 기준
+CONTEXT_WINDOW=200000
 TOTAL_HARNESS_TOKENS=$((CLAUDE_TOKENS + RULES_TOKENS + MEMORY_TOKENS))
-# 200K context window 기준 20% 이상이면 경고
+
+if [[ "$CLAUDE_TOKENS" -gt 0 ]]; then
+  CLAUDE_PCT=$(( CLAUDE_TOKENS * 100 / CONTEXT_WINDOW ))
+  if [[ "$CLAUDE_PCT" -ge 5 ]]; then
+    WARNINGS+=("CLAUDE.md: ~${CLAUDE_TOKENS} tokens (${CLAUDE_PCT}% of context, limit: ≤5%). Trim to index/pointer role.")
+  fi
+fi
+
+if [[ "$RULES_TOKENS" -gt 0 ]]; then
+  RULES_PCT=$(( RULES_TOKENS * 100 / CONTEXT_WINDOW ))
+  if [[ "$RULES_PCT" -ge 3 ]]; then
+    WARNINGS+=("rules/: ~${RULES_TOKENS} tokens (${RULES_PCT}% of context, limit: ≤3%). Reduce active rules.")
+  fi
+fi
+
+if [[ "$MEMORY_TOKENS" -gt 0 ]]; then
+  MEMORY_PCT=$(( MEMORY_TOKENS * 100 / CONTEXT_WINDOW ))
+  if [[ "$MEMORY_PCT" -ge 2 ]]; then
+    WARNINGS+=("MEMORY.md: ~${MEMORY_TOKENS} tokens (${MEMORY_PCT}% of context, limit: ≤2%). Prune stale entries.")
+  fi
+fi
+
+# 전체 하네스 오버헤드 (≤20% = 실제 작업 ≥80%)
 if [[ "$TOTAL_HARNESS_TOKENS" -gt 40000 ]]; then
-  WARNINGS+=("Total harness overhead: ~${TOTAL_HARNESS_TOKENS} tokens (>20% of 200K context). Reduce to keep ≥80% for actual work.")
+  TOTAL_PCT=$(( TOTAL_HARNESS_TOKENS * 100 / CONTEXT_WINDOW ))
+  WARNINGS+=("Total harness overhead: ~${TOTAL_HARNESS_TOKENS} tokens (${TOTAL_PCT}%, limit: ≤20%). Reduce to keep ≥80% for actual work.")
 fi
 
 # 결과 출력 (경고가 있을 때만)

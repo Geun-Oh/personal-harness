@@ -27,15 +27,16 @@ case "$EXTENSION" in
     fi
     ;;
   ts|tsx)
-    # TypeScript는 node --check 불가, tsc --noEmit이 너무 느리므로 기본 검사만
-    if command -v node &>/dev/null; then
-      # 기본적인 JSON-superset 파싱 오류만 검사 (acorn 등 없이)
-      :
+    if command -v npx &>/dev/null && [[ -f "tsconfig.json" ]]; then
+      if ! npx --no-install tsc --noEmit --isolatedModules "$FILE_PATH" 2>/dev/null; then
+        ERRORS+=("CRITICAL: ${FILE_PATH} has TypeScript errors. Run 'npx tsc --noEmit' for details.")
+        HAS_CRITICAL=true
+      fi
     fi
     ;;
   py)
     if command -v python3 &>/dev/null; then
-      if ! python3 -c "import ast; ast.parse(open('$FILE_PATH').read())" 2>/dev/null; then
+      if ! python3 -c "import ast,sys; ast.parse(open(sys.argv[1]).read())" "$FILE_PATH" 2>/dev/null; then
         ERRORS+=("CRITICAL: ${FILE_PATH} has Python syntax errors")
         HAS_CRITICAL=true
       fi
@@ -43,12 +44,12 @@ case "$EXTENSION" in
     ;;
   json)
     if command -v python3 &>/dev/null; then
-      if ! python3 -c "import json; json.load(open('$FILE_PATH'))" 2>/dev/null; then
+      if ! python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$FILE_PATH" 2>/dev/null; then
         ERRORS+=("CRITICAL: ${FILE_PATH} has JSON syntax errors")
         HAS_CRITICAL=true
       fi
     elif command -v node &>/dev/null; then
-      if ! node -e "JSON.parse(require('fs').readFileSync('$FILE_PATH','utf8'))" 2>/dev/null; then
+      if ! node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$FILE_PATH" 2>/dev/null; then
         ERRORS+=("CRITICAL: ${FILE_PATH} has JSON syntax errors")
         HAS_CRITICAL=true
       fi
@@ -97,8 +98,9 @@ case "$EXTENSION" in
     ;;
 esac
 
-# 4. 하드코딩된 시크릿 패턴 검사
-if grep -qiE "(password|secret|api_key|apikey|token)\s*=\s*['\"][^'\"]+['\"]" "$FILE_PATH" 2>/dev/null; then
+# 4. 하드코딩된 시크릿 패턴 검사 (테스트/fixture 파일 제외)
+if [[ ! "$FILE_PATH" =~ (test|spec|fixture|mock|fake)\. ]] && \
+   grep -qiE "(password|secret|api_key|apikey|token)\s*=\s*['\"][^'\"]+['\"]" "$FILE_PATH" 2>/dev/null; then
   ERRORS+=("CRITICAL: ${FILE_PATH} may contain hardcoded secrets. Remove credentials and use environment variables.")
   HAS_CRITICAL=true
 fi

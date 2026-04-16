@@ -8,7 +8,7 @@
       "name": "personal-harness",
       "source": ".",
       "description": "Harness Engineering toolkit — Context Budget, Knowledge Pyramid, Feedback Ladder, Maturity Assessor, Gardener Agent, Gate Runner, Features Validator",
-      "version": "0.1.0"
+      "version": "0.2.0"
     }
   ]
 }

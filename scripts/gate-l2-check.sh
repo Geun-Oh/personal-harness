@@ -62,11 +62,20 @@ elif [[ -f "Gemfile" ]] && command -v rubocop &>/dev/null; then
 fi
 
 # 결과 출력
+HAS_FAIL=false
 if [[ ${#ERRORS[@]} -gt 0 ]]; then
   echo "[L2 Gate] Session check:"
   for err in "${ERRORS[@]}"; do
     echo "  - $err"
+    if [[ "$err" == FAIL:* ]]; then
+      HAS_FAIL=true
+    fi
   done
+fi
+
+# FAIL 레벨 에러가 있으면 차단 (WARN은 통과)
+if [[ "$HAS_FAIL" == true ]]; then
+  exit 1
 fi
 
 exit 0
